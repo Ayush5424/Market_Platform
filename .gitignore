@@ -1,0 +1,28 @@
+# Build and dependency artifacts
+target/
+**/target/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# IDE and Editor configurations
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.log
+
+# Docker / Database persistent volumes
+postgres_data/
+
+# OS metadata
+.DS_Store
+Thumbs.db
