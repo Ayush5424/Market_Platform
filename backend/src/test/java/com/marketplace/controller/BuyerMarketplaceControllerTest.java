@@ -38,7 +38,7 @@ class BuyerMarketplaceControllerTest {
     void shouldSearchAndPaginateProducts() throws Exception {
         ProductSummaryDto p1 = new ProductSummaryDto(
                 1L, "UltraTech PPC Cement", "UltraTech", "High strength", "50kg Bag",
-                1L, "Cement & Concrete", "http://img1", BigDecimal.valueOf(5.95), 2
+                1L, "Cement & Concrete", "http://img1", BigDecimal.valueOf(365.00), 2
         );
         PageImpl<ProductSummaryDto> page = new PageImpl<>(List.of(p1), PageRequest.of(0, 10), 1);
         PagedResponse<ProductSummaryDto> response = PagedResponse.from(page);
@@ -56,7 +56,7 @@ class BuyerMarketplaceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(jsonPath("$.content[0].name").value("UltraTech PPC Cement"))
-                .andExpect(jsonPath("$.content[0].lowestPrice").value(5.95))
+                .andExpect(jsonPath("$.content[0].lowestPrice").value(365.00))
                 .andExpect(jsonPath("$.content[0].eligibleSellersCount").value(2))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
@@ -66,7 +66,7 @@ class BuyerMarketplaceControllerTest {
     void shouldReturnProductDetail() throws Exception {
         ProductDetailDto detail = new ProductDetailDto(
                 1L, "UltraTech PPC Cement", "UltraTech", "High strength", "50kg Bag",
-                1L, "Cement & Concrete", "http://img1", BigDecimal.valueOf(5.95), 2, List.of()
+                1L, "Cement & Concrete", "http://img1", BigDecimal.valueOf(365.00), 2, List.of()
         );
 
         when(productService.getProductDetail(1L)).thenReturn(detail);
@@ -75,6 +75,6 @@ class BuyerMarketplaceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("UltraTech PPC Cement"))
-                .andExpect(jsonPath("$.lowestPrice").value(5.95));
+                .andExpect(jsonPath("$.lowestPrice").value(365.00));
     }
 }

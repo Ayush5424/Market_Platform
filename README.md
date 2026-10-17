@@ -149,14 +149,14 @@ The database includes realistic sample data across 6 categories, 12 construction
 | ID | Business Name | Contact Person | Status | Purpose / Test Scenario |
 |---|---|---|---|---|
 | **1** | **Prime Builders Supply** | Vikram Mehta | `APPROVED` | Primary active seller with cement, rebar, sand, pipe listings. |
-| **2** | **Apex Material Depot** | Sarah Jenkins | `APPROVED` | Offers lowest price on PPC Cement ($5.95) and steel I-beams. |
-| **3** | **SolidGround Aggregates** | Ramesh Patel | `APPROVED` | Demonstrates inactive listing exclusion ($6.50 PPC cement is inactive). |
+| **2** | **Apex Material Depot** | Sarah Jenkins | `APPROVED` | Offers lowest price on PPC Cement (₹365.00) and steel I-beams. |
+| **3** | **SolidGround Aggregates** | Ramesh Patel | `APPROVED` | Demonstrates inactive listing exclusion (₹395.00 PPC cement is inactive). |
 | **4** | **Heritage Masonry & Tile** | Elena Rostova | `APPROVED` | Demonstrates stock < MOQ exclusion (Aggregates: stock 8 < MOQ 20). |
 | **5** | **Titan Steel & Iron** | David Chen | `PENDING` | Listing creation is rejected (HTTP 403 Forbidden). Excluded from discovery. |
 | **6** | **Blacklisted Materials Ltd** | Marcus Vance | `REJECTED` | Listing operations forbidden (HTTP 403). Excluded from discovery. |
 
 ### Special Discovery Test Cases:
-* **Product 1 (UltraTech PPC Cement)**: Multiple approved sellers; lowest price is $5.95 from Seller 2 (Seller 1 is $6.20, Seller 3 is inactive at $6.50).
+* **Product 1 (UltraTech PPC Cement)**: Multiple approved sellers; lowest price is ₹365.00 from Seller 2 (Seller 1 is ₹380.00, Seller 3 is inactive at ₹395.00).
 * **Product 6 (Granite Aggregates 20mm)**: Seller 4 has stock (8) < MOQ (20); automatically excluded from discovery.
 * **Product 12 (Fire-Resistant Refractory Bricks)**: Only listed by Seller 5 (PENDING) and Seller 6 (REJECTED); demonstrates zero eligible sellers and `lowestPrice: null` display.
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Seller, SellerListing, ProductSummary, Category, CreateListingPayload, UpdateListingPayload, ApiError } from '../types';
 import { api } from '../services/api';
+import { formatINR } from '../utils/formatters';
 import {
   Plus,
   Edit2,
@@ -275,11 +276,11 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
       const updated = await api.updateListing(currentSeller.id, activeEditingListing.id, payload);
       setListings((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
       setShowEditModal(false);
-      showToast('success', `Listing updated successfully! New version: v${updated.version}`);
+      showToast('success', `Listing updated successfully! Revision: Rev ${updated.version}`);
     } catch (err: unknown) {
       const apiErr = err as ApiError;
       if (apiErr.status === 409) {
-        showToast('error', 'Optimistic Locking Conflict (409): Listing was modified concurrently by another user or session. Please refresh.');
+        showToast('error', 'Conflict: This listing was updated in another session. Please refresh the page to view latest data.');
       } else {
         showToast('error', apiErr.message || 'Failed to update listing');
       }
@@ -326,7 +327,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Seller ID #{currentSeller.id}
+                Supplier ID #{currentSeller.id}
               </span>
               <span
                 className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
@@ -349,11 +350,11 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
             </p>
           </div>
 
-          {/* Quick Demo Switcher */}
+          {/* Quick Supplier Switcher */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium">Switch Identity:</span>
+            <span className="text-xs text-slate-500 font-medium">Switch Supplier:</span>
             <select
-              aria-label="Switch Seller Identity"
+              aria-label="Switch Supplier"
               value={currentSeller.id}
               onChange={(e) => {
                 const s = sellers.find((item) => item.id === Number(e.target.value));
@@ -394,13 +395,12 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
               </strong>
               {currentSeller.status === 'PENDING' ? (
                 <span>
-                  Your seller account is currently awaiting administrative onboarding review. As enforced by backend security rules,
-                  creating or modifying material listings is strictly disabled until status is upgraded to APPROVED.
+                  Your supplier account is currently awaiting administrative onboarding review.
+                  Creating or modifying material listings is disabled until status is upgraded to APPROVED.
                 </span>
               ) : (
                 <span>
-                  This seller account has been rejected due to compliance/quality checks. All marketplace listings are disabled, and further
-                  changes are rejected with HTTP 403 Forbidden.
+                  This supplier account has been rejected due to compliance or quality checks. All marketplace listings are disabled.
                 </span>
               )}
             </div>
@@ -528,7 +528,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
                   <th className="py-3 px-4">Warehouse Stock</th>
                   <th className="py-3 px-4">MOQ</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-center">Version (JPA)</th>
+                  <th className="py-3 px-4 text-center">Revision</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -550,7 +550,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
                     {/* Price */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <span className="text-sm font-extrabold text-slate-900">
-                        ${Number(item.price).toFixed(2)}
+                        {formatINR(item.price)}
                       </span>
                       <span className="text-[10px] text-slate-500 block">per {item.productUnit}</span>
                     </td>
@@ -604,10 +604,10 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
                       </button>
                     </td>
 
-                    {/* Version (Optimistic Lock) */}
+                    {/* Revision */}
                     <td className="py-3.5 px-4 whitespace-nowrap text-center">
                       <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-mono text-[11px] font-semibold border border-slate-200">
-                        v{item.version}
+                        Rev {item.version}
                       </span>
                     </td>
 
@@ -821,14 +821,14 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
               <div className="grid grid-cols-3 gap-3 pt-2">
                 <div>
                   <label htmlFor="create-form-price" className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Price ($) *
+                    Price (₹) *
                   </label>
                   <input
                     id="create-form-price"
                     type="number"
                     step="0.01"
                     min="0.01"
-                    placeholder="25.50"
+                    placeholder="380.00"
                     value={formPrice}
                     onChange={(e) => setFormPrice(e.target.value)}
                     className="w-full text-xs font-semibold border border-slate-300 rounded-lg p-2.5 bg-white text-slate-900 focus:ring-2 focus:ring-amber-500"
@@ -933,7 +933,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label htmlFor="edit-form-price" className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Price ($) *
+                    Price (₹) *
                   </label>
                   <input
                     id="edit-form-price"
@@ -978,22 +978,22 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Optimistic Locking Concurrency Simulation Box */}
+              {/* Concurrent Update Protection / Revision Control */}
               <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-amber-950 flex items-center gap-1">
                     <Info className="w-3.5 h-3.5 text-amber-600" />
-                    Optimistic Locking Control (@Version)
+                    Concurrent Revision Protection
                   </span>
                   <span className="text-xs font-mono font-bold text-amber-900 bg-amber-200/70 px-2 py-0.5 rounded">
-                    Current DB Version: v{activeEditingListing.version}
+                    Current Revision: Rev {activeEditingListing.version}
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-800 leading-relaxed">
-                  The backend enforces JPA `@Version` optimistic concurrency. If another user saves an update first, your submit will trigger a <strong>409 Conflict</strong>.
+                  Automatic protection ensures that concurrent modifications from multiple sessions do not overwrite each other without warning.
                 </p>
                 <div className="mt-2 flex items-center gap-2">
-                  <label htmlFor="test-stale-version" className="text-[11px] font-semibold text-slate-700">Simulate Stale Version:</label>
+                  <label htmlFor="test-stale-version" className="text-[11px] font-semibold text-slate-700">Simulate Conflict:</label>
                   <input
                     id="test-stale-version"
                     type="number"
@@ -1006,7 +1006,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({
                     onClick={() => setFormVersion((formVersion ?? activeEditingListing.version) + 99)}
                     className="text-[10px] font-bold px-2 py-1 rounded bg-amber-200 text-amber-900 hover:bg-amber-300 transition-colors"
                   >
-                    Simulate Conflict (+99)
+                    Set Conflict Version (+99)
                   </button>
                   <button
                     type="button"

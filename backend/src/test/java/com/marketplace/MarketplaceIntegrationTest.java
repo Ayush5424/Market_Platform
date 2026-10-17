@@ -33,15 +33,15 @@ class MarketplaceIntegrationTest {
         assertThat(body.get("totalElements")).isEqualTo(1);
 
         // 2. Product Detail for Product 1 (UltraTech PPC):
-        // Seller 1: $6.20 (approved, active)
-        // Seller 2: $5.95 (approved, active) -> Lowest price!
-        // Seller 3: $6.50 (approved, INACTIVE) -> excluded from eligible
+        // Seller 1: ₹380.00 (approved, active)
+        // Seller 2: ₹365.00 (approved, active) -> Lowest price!
+        // Seller 3: ₹395.00 (approved, INACTIVE) -> excluded from eligible
         ResponseEntity<ProductDetailDto> detailRes = restTemplate.getForEntity("/api/v1/products/1", ProductDetailDto.class);
         assertThat(detailRes.getStatusCode()).isEqualTo(HttpStatus.OK);
         ProductDetailDto detail = detailRes.getBody();
         assertThat(detail).isNotNull();
         assertThat(detail.name()).isEqualTo("Portland Pozzolana Cement (PPC)");
-        assertThat(detail.lowestPrice()).isEqualByComparingTo(BigDecimal.valueOf(5.95));
+        assertThat(detail.lowestPrice()).isEqualByComparingTo(BigDecimal.valueOf(365.00));
         assertThat(detail.eligibleSellersCount()).isEqualTo(2);
 
         // 3. Product 12 (Specialized Refractory Bricks): only PENDING and REJECTED sellers listed it
@@ -59,7 +59,7 @@ class MarketplaceIntegrationTest {
         ProductDetailDto p6 = p6Res.getBody();
         assertThat(p6).isNotNull();
         assertThat(p6.eligibleSellersCount()).isEqualTo(2);
-        assertThat(p6.lowestPrice()).isEqualByComparingTo(BigDecimal.valueOf(28.00));
+        assertThat(p6.lowestPrice()).isEqualByComparingTo(BigDecimal.valueOf(1200.00));
     }
 
     @Test
@@ -117,12 +117,12 @@ class MarketplaceIntegrationTest {
         assertThat(conflictRes.getBody().message()).contains("modified concurrently");
 
         // 7. Successful update: Seller 1 updates with matching version (version 0)
-        UpdateListingRequest validUpdate = new UpdateListingRequest(BigDecimal.valueOf(6.15), 900, 50, true, 0L);
+        UpdateListingRequest validUpdate = new UpdateListingRequest(BigDecimal.valueOf(375.00), 900, 50, true, 0L);
         HttpEntity<UpdateListingRequest> validUpdateEntity = new HttpEntity<>(validUpdate, seller1Headers);
 
         ResponseEntity<SellerListingDto> updateSuccess = restTemplate.exchange("/api/v1/seller/listings/1", HttpMethod.PUT, validUpdateEntity, SellerListingDto.class);
         assertThat(updateSuccess.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(updateSuccess.getBody().price()).isEqualByComparingTo(BigDecimal.valueOf(6.15));
+        assertThat(updateSuccess.getBody().price()).isEqualByComparingTo(BigDecimal.valueOf(375.00));
         assertThat(updateSuccess.getBody().stockQuantity()).isEqualTo(900);
         assertThat(updateSuccess.getBody().version()).isEqualTo(1L); // Version incremented!
     }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ProductDetail } from '../types';
 import { api } from '../services/api';
+import { formatINR } from '../utils/formatters';
 import {
   X,
   Building2,
@@ -56,7 +57,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
         <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
           <div className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-bold">Seller Comparison & Availability</h2>
+            <h2 className="text-lg font-bold">Supplier Comparison & Availability</h2>
           </div>
           <button
             type="button"
@@ -72,7 +73,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
           {loading && (
             <div className="flex flex-col items-center justify-center py-16 text-slate-500">
               <Loader2 className="w-8 h-8 animate-spin text-amber-500 mb-2" />
-              <p className="text-sm font-medium">Loading seller quotes and inventory...</p>
+              <p className="text-sm font-medium">Loading supplier quotes and inventory...</p>
             </div>
           )}
 
@@ -130,11 +131,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                     <div className="text-2xl font-black text-emerald-950 mt-0.5">
                       {product.lowestPrice !== null ? (
                         <>
-                          ${Number(product.lowestPrice).toFixed(2)}{' '}
+                          {formatINR(product.lowestPrice)}{' '}
                           <span className="text-xs font-normal text-emerald-700">/ {product.unit}</span>
                         </>
                       ) : (
-                        <span className="text-sm font-semibold text-rose-600">No active sellers</span>
+                        <span className="text-sm font-semibold text-rose-600">No active suppliers</span>
                       )}
                     </div>
                   </div>
@@ -148,11 +149,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
                 <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                      Eligible Sellers Offering Stock
+                      Eligible Suppliers Offering Stock
                     </span>
                     <div className="text-2xl font-black text-slate-900 mt-0.5">
                       {product.eligibleSellersCount}{' '}
-                      <span className="text-xs font-normal text-slate-500">of {product.offers.length} sellers</span>
+                      <span className="text-xs font-normal text-slate-500">of {product.offers.length} suppliers</span>
                     </div>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-700 border border-slate-200">
@@ -165,23 +166,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
               <div>
                 <div className="flex items-center justify-between mb-2.5">
                   <h4 className="text-sm font-bold uppercase tracking-wider text-slate-800">
-                    All Seller Listings
+                    All Supplier Listings
                   </h4>
                   <span className="text-xs text-slate-500">
-                    * Only approved sellers with stock ≥ MOQ appear in discovery
+                    * Only approved suppliers with stock ≥ MOQ appear in discovery
                   </span>
                 </div>
 
                 {product.offers.length === 0 ? (
                   <div className="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-slate-500 text-sm">
-                    No sellers have listed this construction material yet.
+                    No suppliers have listed this construction material yet.
                   </div>
                 ) : (
                   <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
                     <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
                       <thead className="bg-slate-100 text-slate-700 font-semibold uppercase tracking-wider">
                         <tr>
-                          <th className="py-3 px-3.5">Seller & Business</th>
+                          <th className="py-3 px-3.5">Supplier & Business</th>
                           <th className="py-3 px-3.5">Unit Price</th>
                           <th className="py-3 px-3.5">Available Stock</th>
                           <th className="py-3 px-3.5">Min Order (MOQ)</th>
@@ -226,7 +227,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ productI
 
                               <td className="py-3 px-3.5 whitespace-nowrap">
                                 <span className="text-base font-extrabold text-slate-900">
-                                  ${Number(offer.price).toFixed(2)}
+                                  {formatINR(offer.price)}
                                 </span>
                                 <span className="text-[11px] text-slate-500 ml-1">/ {product.unit}</span>
                               </td>

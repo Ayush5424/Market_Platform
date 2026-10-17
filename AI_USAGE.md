@@ -60,3 +60,10 @@ This document outlines the AI assistance utilized during the architecture, devel
   During the initial frontend package setup, `npm install -D tailwindcss` pulled the newly released Tailwind v4 into the workspace, which requires `@tailwindcss/postcss` and breaks standard Tailwind v3 PostCSS configurations.
 * **The Correction Applied**:
   Rather than using alpha/unstable PostCSS bindings, the configuration was consciously pinned to `tailwindcss@^3.4.17` with standard `autoprefixer` and `postcss`, ensuring 100% reproducible, error-free production builds.
+
+### 4. Realistic Regional Construction Material Pricing (INR Transition)
+* **Initial Consideration**:
+  A superficial approach to the currency change would have been merely replacing the dollar symbol `$` with the Indian Rupee symbol `₹` in the frontend formatting, leaving the underlying numbers at USD levels (e.g. ₹5.95 for a 50kg bag of cement or ₹850.00 for a metric ton of structural steel).
+* **The Correction Applied**:
+  The database migration seed data (`V2__insert_sample_data.sql`), mock unit tests, and integration test assertions were reviewed and updated with realistic Indian B2B wholesale construction material pricing (e.g., UltraTech PPC Cement at ₹365–₹395 / bag, Tata Tiscon TMT Rebar at ₹55,000–₹59,500 / Metric Ton, River Sand at ₹1,650–₹1,800 / Metric Ton, Kiln Burnt Bricks at ₹7,500 / 1000 pcs). Frontend formatting was backed by `Intl.NumberFormat` with `en-IN` locale formatting for clean, consistent thousand-separator representation across the entire platform.
+

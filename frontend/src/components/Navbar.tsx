@@ -95,13 +95,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="relative group">
               <div className="text-right hidden md:block">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-                  Demo Seller Identity
+                  Supplier Account
                 </div>
               </div>
               <div className="flex items-center gap-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs transition-colors">
                 <div className="flex flex-col text-left">
                   <span className="font-semibold text-white truncate max-w-[140px] sm:max-w-[180px]">
-                    {selectedSeller ? selectedSeller.businessName : 'Select Seller'}
+                    {selectedSeller ? selectedSeller.businessName : 'Select Supplier'}
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {selectedSeller && getStatusBadge(selectedSeller.status)}
@@ -109,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
                 <select
-                  aria-label="Switch Demo Seller"
+                  aria-label="Switch Supplier Account"
                   value={selectedSeller?.id || ''}
                   onChange={(e) => {
                     const id = Number(e.target.value);

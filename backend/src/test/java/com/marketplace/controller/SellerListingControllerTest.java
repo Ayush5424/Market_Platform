@@ -99,11 +99,11 @@ class SellerListingControllerTest {
     @Test
     @DisplayName("Valid create listing: returns 201 Created")
     void shouldReturn201OnValidCreate() throws Exception {
-        CreateListingRequest valid = new CreateListingRequest(10L, null, BigDecimal.valueOf(25.50), 100, 5, true);
+        CreateListingRequest valid = new CreateListingRequest(10L, null, BigDecimal.valueOf(380.00), 100, 5, true);
 
         SellerListingDto dto = new SellerListingDto(
                 99L, 1L, "Prime Builders", 10L, "Sample Product", "Brand", "Bag", "http://img",
-                1L, "Cement", BigDecimal.valueOf(25.50), 100, 5, true, 0L, OffsetDateTime.now(), OffsetDateTime.now()
+                1L, "Cement", BigDecimal.valueOf(380.00), 100, 5, true, 0L, OffsetDateTime.now(), OffsetDateTime.now()
         );
 
         when(listingService.createListing(eq(1L), any())).thenReturn(dto);
@@ -114,6 +114,6 @@ class SellerListingControllerTest {
                         .content(objectMapper.writeValueAsString(valid)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(99))
-                .andExpect(jsonPath("$.price").value(25.50));
+                .andExpect(jsonPath("$.price").value(380.00));
     }
 }

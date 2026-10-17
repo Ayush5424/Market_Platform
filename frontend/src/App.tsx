@@ -4,7 +4,7 @@ import { api } from './services/api';
 import { Navbar } from './components/Navbar';
 import { BuyerMarketplace } from './components/BuyerMarketplace';
 import { SellerDashboard } from './components/SellerDashboard';
-import { Loader2, HardHat, ShieldCheck, Database, Layers } from 'lucide-react';
+import { Loader2, HardHat } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [view, setView] = useState<'buyer' | 'seller'>('buyer');
@@ -40,10 +40,10 @@ export const App: React.FC = () => {
         <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 mb-4 animate-bounce shadow-lg">
           <HardHat className="w-7 h-7 stroke-[2.5]" />
         </div>
-        <h1 className="text-xl font-bold tracking-tight">MarketPlace Construction Engine</h1>
+        <h1 className="text-xl font-bold tracking-tight">MarketPlace</h1>
         <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-          Loading supplier catalogue and platform data...
+          Loading supplier catalogue and materials...
         </p>
       </div>
     );
@@ -73,40 +73,12 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Professional Construction Platform Footer */}
+      {/* Clean, Professional Footer */}
       <footer className="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-amber-500 flex items-center justify-center text-slate-950 font-bold text-xs">
-                M
-              </div>
-              <span className="font-bold text-slate-200 text-sm">MarketPlace Platform</span>
-              <span className="text-[10px] text-slate-500 border-l border-slate-700 pl-2">
-                Construction Materials Procurement Architecture
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
-              <span className="flex items-center gap-1">
-                <Database className="w-3.5 h-3.5 text-amber-400" />
-                PostgreSQL + Flyway
-              </span>
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                Optimistic Locking (@Version)
-              </span>
-              <span className="flex items-center gap-1">
-                <Layers className="w-3.5 h-3.5 text-blue-400" />
-                Spring Boot 3 + Java 21 + React
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>© {new Date().getFullYear()} MarketPlace Enterprise. Designed for heavy construction logistics.</p>
-            <p>Demo Auth Mode: Server-validated <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-300">X-Seller-Id</code> header.</p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-1.5">
+          <div className="font-bold text-slate-100 text-base">MarketPlace</div>
+          <p className="text-slate-400 text-xs">Construction Materials Marketplace</p>
+          <p className="text-slate-500 text-[11px] pt-2">© 2026 MarketPlace. All rights reserved.</p>
         </div>
       </footer>
     </div>
