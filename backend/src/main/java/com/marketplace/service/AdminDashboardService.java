@@ -53,9 +53,6 @@ public class AdminDashboardService {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.adminExecutor = adminExecutor;
-
-        // Initialize system event
-        recordEvent("SYSTEM_INIT", "Admin Real-Time Dashboard Service initialized with concurrent executor.");
     }
 
     /**
@@ -68,7 +65,7 @@ public class AdminDashboardService {
         // Fetch data snapshot needed for aggregation concurrently
         // Task 1: Seller statistics
         CompletableFuture<SellerStatsHolder> sellerStatsFuture = CompletableFuture.supplyAsync(() -> {
-            executedTasks.add("Seller-Counts-And-Entities-Task (" + Thread.currentThread().getName() + ")");
+            executedTasks.add("Seller-Metrics-Aggregation");
             List<Seller> allSellers = sellerRepository.findAllByOrderByBusinessNameAsc();
             long liveCount = allSellers.stream().filter(s -> s.getStatus() == SellerStatus.APPROVED).count();
             long pendingCount = allSellers.stream().filter(s -> s.getStatus() == SellerStatus.PENDING).count();
@@ -78,7 +75,7 @@ public class AdminDashboardService {
 
         // Task 2: Listings and inventory snapshot
         CompletableFuture<ListingsStatsHolder> listingsStatsFuture = CompletableFuture.supplyAsync(() -> {
-            executedTasks.add("Listings-And-Inventory-Task (" + Thread.currentThread().getName() + ")");
+            executedTasks.add("Listings-Inventory-Aggregation");
             List<SellerListing> allListings = listingRepository.findAllWithDetails();
             long activeCount = allListings.stream().filter(l -> Boolean.TRUE.equals(l.getIsActive())).count();
             long totalStock = allListings.stream()
@@ -94,7 +91,7 @@ public class AdminDashboardService {
 
         // Task 3: Categories and master products
         CompletableFuture<CatalogStatsHolder> catalogStatsFuture = CompletableFuture.supplyAsync(() -> {
-            executedTasks.add("Catalog-Products-And-Categories-Task (" + Thread.currentThread().getName() + ")");
+            executedTasks.add("Catalog-Categories-Aggregation");
             List<Category> allCategories = categoryRepository.findAllByOrderByNameAsc();
             long productCount = productRepository.count();
             return new CatalogStatsHolder(allCategories, productCount);
@@ -109,7 +106,7 @@ public class AdminDashboardService {
 
         // Concurrent Task 4: Detailed Seller Breakdown
         CompletableFuture<List<AdminSellerMetricDto>> sellerBreakdownFuture = CompletableFuture.supplyAsync(() -> {
-            executedTasks.add("Seller-Breakdown-Worker (" + Thread.currentThread().getName() + ")");
+            executedTasks.add("Seller-Breakdown-Worker");
             Map<Long, List<SellerListing>> listingsBySeller = listingsStats.allListings().stream()
                     .collect(Collectors.groupingBy(l -> l.getSeller().getId()));
 
@@ -148,7 +145,7 @@ public class AdminDashboardService {
 
         // Concurrent Task 5: Detailed Category Breakdown
         CompletableFuture<List<AdminCategoryMetricDto>> categoryBreakdownFuture = CompletableFuture.supplyAsync(() -> {
-            executedTasks.add("Category-Breakdown-Worker (" + Thread.currentThread().getName() + ")");
+            executedTasks.add("Category-Breakdown-Worker");
             Map<Long, List<SellerListing>> listingsByCategory = listingsStats.allListings().stream()
                     .collect(Collectors.groupingBy(l -> l.getProduct().getCategory().getId()));
 
@@ -250,11 +247,17 @@ public class AdminDashboardService {
         return emitter;
     }
 
+    private static final Set<String> BUSINESS_EVENTS = Set.of(
+            "LISTING_CREATED", "LISTING_UPDATED", "STATUS_TOGGLED", "LISTING_DELETED", "SELLER_STATUS_CHANGED"
+    );
+
     /**
      * Broadcast an update triggered by marketplace mutations (e.g., listing added, toggled, etc.)
      */
     public void broadcastChange(String eventType, String description) {
-        recordEvent(eventType, description);
+        if (BUSINESS_EVENTS.contains(eventType)) {
+            recordEvent(eventType, description);
+        }
 
         // Run concurrent calculation and broadcast to all connected emitters
         adminExecutor.execute(() -> {
@@ -334,9 +337,6 @@ public class AdminDashboardService {
 
         List<Long> latencies = futures.stream().map(CompletableFuture::join).toList();
         double avgLatency = latencies.stream().mapToLong(Long::longValue).average().orElse(0.0);
-
-        recordEvent("CONCURRENCY_TEST", "Simulated " + workers + " parallel dashboard requests completed in " + totalDuration + "ms (avg " + String.format("%.1f", avgLatency) + "ms)");
-        broadcastChange("CONCURRENCY_TEST_COMPLETE", "Concurrent workload simulation of " + workers + " parallel threads finished successfully.");
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("workersExecuted", workers);

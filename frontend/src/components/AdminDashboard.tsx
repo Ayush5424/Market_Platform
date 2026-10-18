@@ -1,41 +1,30 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   AdminDashboardResponse,
-  AdminSellerMetric,
   SellerStatus,
 } from '../types';
 import { api } from '../services/api';
 import { formatINR } from '../utils/formatters';
 import {
-  ShieldCheck,
   Users,
   Package,
   Layers,
-  Cpu,
   RefreshCw,
-  Zap,
   Activity,
-  AlertCircle,
   Clock,
   ShieldAlert,
   Search,
-  CheckCircle2,
   TrendingUp,
-  Server,
   Radio,
-  ArrowUpRight,
-  Database,
-  SlidersHorizontal,
-  ChevronRight,
   Loader2,
+  Tag,
+  Store,
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [data, setData] = useState<AdminDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [simulating, setSimulating] = useState(false);
-  const [simulationResult, setSimulationResult] = useState<Record<string, any> | null>(null);
   const [sseConnected, setSseConnected] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'ALL' | SellerStatus>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,26 +136,11 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Handle concurrent simulation trigger
-  const handleSimulateConcurrency = async () => {
-    setSimulating(true);
-    try {
-      const res = await api.simulateAdminConcurrency(12);
-      setSimulationResult(res);
-      await loadDashboardData();
-    } catch (err) {
-      console.error('Simulation error:', err);
-    } finally {
-      setSimulating(false);
-    }
-  };
-
   // Handle quick seller status toggle (Approve / Reject / Pending)
   const handleStatusChange = async (sellerId: number, newStatus: SellerStatus) => {
     setStatusUpdatingId(sellerId);
     try {
       await api.updateSellerStatus(sellerId, newStatus);
-      // Real-time SSE will update data automatically, but we can also eagerly sync
       await loadDashboardData();
     } catch (err) {
       console.error('Failed to update seller status:', err);
@@ -179,14 +153,22 @@ export const AdminDashboard: React.FC = () => {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        <p className="text-sm font-medium text-slate-600">Initializing Admin Real-Time Portal...</p>
+        <p className="text-sm font-medium text-slate-600">Loading Admin Dashboard...</p>
       </div>
     );
   }
 
   if (!data) return null;
 
-  const { overview, sellerMetrics, categoryMetrics, recentEvents, concurrencyStats } = data;
+  const { overview, sellerMetrics, categoryMetrics, recentEvents } = data;
+
+  // Filter out any technical or system test events from the business activity feed
+  const businessEvents = recentEvents.filter(
+    (evt) =>
+      !['SYSTEM_INIT', 'CONCURRENCY_TEST', 'CONCURRENCY_TEST_COMPLETE', 'MANUAL_SYNC'].includes(
+        evt.eventType
+      )
+  );
 
   // Filter sellers
   const filteredSellers = sellerMetrics.filter((s) => {
@@ -224,9 +206,50 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const getEventBadge = (type: string) => {
+    switch (type) {
+      case 'LISTING_CREATED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+            New Listing
+          </span>
+        );
+      case 'LISTING_UPDATED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
+            Price & Stock
+          </span>
+        );
+      case 'STATUS_TOGGLED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+            Visibility
+          </span>
+        );
+      case 'SELLER_STATUS_CHANGED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
+            Supplier Status
+          </span>
+        );
+      case 'LISTING_DELETED':
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-rose-100 text-rose-800 px-2 py-0.5 rounded">
+            Removed
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">
+            Update
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Top Header & Real-time Live Status Bar */}
+      {/* Top Header & Live Sync Status Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -235,20 +258,17 @@ export const AdminDashboard: React.FC = () => {
                 Marketplace Administration
               </span>
               <span className="text-slate-400 text-xs">•</span>
-              <span className="text-xs text-slate-300 flex items-center gap-1">
-                <Database className="w-3 h-3 text-amber-400" />
-                Live Telemetry
-              </span>
+              <span className="text-xs text-slate-300">Control Center</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
               Admin Operations Dashboard
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
-              Real-time monitoring of live suppliers, catalogue listings, category distributions, and concurrent backend aggregation.
+              Live monitoring of suppliers, product listings, category distributions, and marketplace inventory.
             </p>
           </div>
 
-          {/* Action & Sync Controls */}
+          {/* Sync Controls */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Live SSE Status Pill */}
             <div
@@ -265,83 +285,41 @@ export const AdminDashboard: React.FC = () => {
                   sseConnected ? 'text-emerald-400 animate-pulse' : 'text-amber-400'
                 }`}
               />
-              <span>{sseConnected ? 'LIVE STREAM SYNCED' : 'POLLING FALLBACK'}</span>
+              <span>{sseConnected ? 'LIVE SYNCED' : 'POLLING FALLBACK'}</span>
               <span className="text-[10px] text-slate-400">({timeAgo})</span>
             </div>
 
-            {/* Force Sync Button */}
+            {/* Sync Now Button */}
             <button
               type="button"
               onClick={handleManualSync}
               disabled={syncing}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
-              title="Force concurrent recalculation and broadcast across all connected clients"
+              title="Refresh dashboard metrics"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin text-amber-400' : ''}`} />
               <span>{syncing ? 'Syncing...' : 'Sync Now'}</span>
             </button>
-
-            {/* Simulate Concurrency Button */}
-            <button
-              type="button"
-              onClick={handleSimulateConcurrency}
-              disabled={simulating}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition shadow-md hover:shadow active:scale-95 disabled:opacity-50"
-            >
-              <Zap className={`w-3.5 h-3.5 ${simulating ? 'animate-bounce' : ''}`} />
-              <span>{simulating ? 'Simulating Load...' : 'Simulate Concurrency'}</span>
-            </button>
           </div>
         </div>
 
-        {/* Real-time Subtitle Bar */}
+        {/* Clean Footer Bar */}
         <div className="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <Server className="w-3.5 h-3.5 text-sky-400" />
-              Executor: <span className="font-mono text-slate-200">{concurrencyStats.threadPoolName}*</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-              Latency: <span className="font-mono text-slate-200">{concurrencyStats.aggregationDurationMs} ms</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-amber-400" />
-              Active Workers: <span className="font-mono text-slate-200">{concurrencyStats.activeThreads} / {concurrencyStats.poolSize}</span>
+          <div className="flex items-center gap-2 text-slate-300">
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span>
+              Last synchronized:{' '}
+              <span className="text-white font-medium">
+                {lastSyncTime.toLocaleTimeString()}
+              </span>{' '}
+              ({timeAgo})
             </span>
           </div>
-
-          <div className="text-[11px] text-slate-500">
-            Last Concurrent Refresh: {new Date(concurrencyStats.timestamp).toLocaleTimeString()}
+          <div className="text-[11px] text-slate-400">
+            Real-time updates synced across all connected devices
           </div>
         </div>
       </div>
-
-      {/* Benchmark / Simulation Result Modal Banner (if triggered) */}
-      {simulationResult && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-400/30 rounded-xl p-4 flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-slate-900">
-                Concurrent Benchmark Completed: {simulationResult.workersExecuted} Parallel Worker Threads
-              </h4>
-              <p className="text-xs text-slate-600">
-                Processed across thread pool in <span className="font-bold text-slate-900">{simulationResult.totalDurationMs} ms</span> (Average request latency: <span className="font-bold text-slate-900">{Number(simulationResult.averageLatencyMs).toFixed(1)} ms</span>). Total completed task executions: <span className="font-bold text-slate-900">{simulationResult.completedTasks}</span>.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSimulationResult(null)}
-            className="text-slate-400 hover:text-slate-700 text-xs px-2 py-1 rounded border border-slate-300"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* KPI Cards: The 3 Core Requirements + Valuation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -427,7 +405,7 @@ export const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Master Catalog</span>
+            <span>Master Catalogue</span>
             <span className="text-slate-700 font-medium">{overview.totalProductsCount} Material Specs</span>
           </div>
         </div>
@@ -457,37 +435,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Concurrency Inspector Bar */}
-      <div className="bg-slate-900 text-slate-300 rounded-xl p-4 border border-slate-800 shadow">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center">
-              <Cpu className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Concurrent Processing Engine
-              </span>
-              <p className="text-[11px] text-slate-400">
-                Parallel CompletableFutures distributed across asynchronous workers for zero-blocking dashboard metrics.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {concurrencyStats.concurrentTasksExecuted.map((task, idx) => (
-              <span
-                key={idx}
-                className="text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-300 px-2 py-0.5 rounded"
-              >
-                {task}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content: Category Distributions & Live Event Stream */}
+      {/* Main Content: Category Distributions & Live Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Category Breakdown Matrix (2 cols on large screen) */}
         <div className="lg:col-span-2 space-y-4">
@@ -549,41 +497,45 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Real-time Event Feed (1 col on large screen) */}
+        {/* Real-time Business Activity Feed (1 col on large screen) */}
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col h-full">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-500" />
-                Live Activity Feed
+                Recent Marketplace Activity
               </h3>
               <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                Real-Time
+                Live
               </span>
             </div>
             <p className="text-xs text-slate-500 mb-4">
-              Real-time events pushed automatically as sellers list, adjust prices, or change status.
+              Real-time supplier listings, stock adjustments, and account verification updates.
             </p>
 
             <div className="space-y-2.5 overflow-y-auto max-h-[340px] pr-1">
-              {recentEvents.length === 0 ? (
-                <div className="text-center py-8 text-xs text-slate-400">
-                  No marketplace events recorded yet.
+              {businessEvents.length === 0 ? (
+                <div className="text-center py-10 px-4 text-xs text-slate-400 space-y-1">
+                  <Store className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                  <p className="font-medium text-slate-600">No recent updates yet</p>
+                  <p className="text-[11px] text-slate-400">
+                    When suppliers add materials or modify inventory, updates will stream here in real time.
+                  </p>
                 </div>
               ) : (
-                recentEvents.map((evt) => (
+                businessEvents.map((evt) => (
                   <div
                     key={evt.id}
-                    className="p-2.5 rounded-lg border border-slate-100 bg-slate-50 text-xs hover:border-slate-300 transition"
+                    className="p-3 rounded-lg border border-slate-100 bg-slate-50/80 text-xs hover:border-slate-300 transition"
                   >
                     <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                      <span className="font-mono uppercase font-bold text-slate-700 bg-slate-200 px-1 rounded">
-                        {evt.eventType}
-                      </span>
+                      {getEventBadge(evt.eventType)}
                       <span>{new Date(evt.timestamp).toLocaleTimeString()}</span>
                     </div>
-                    <p className="text-slate-700 text-xs leading-relaxed">{evt.description}</p>
+                    <p className="text-slate-800 text-xs leading-relaxed font-medium mt-1">
+                      {evt.description}
+                    </p>
                   </div>
                 ))
               )}
