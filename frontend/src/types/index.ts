@@ -122,3 +122,67 @@ export interface ApiError {
   validationErrors?: Record<string, string>;
   path?: string;
 }
+
+export interface AdminDashboardOverview {
+  liveSellersCount: number;
+  totalSellersCount: number;
+  pendingSellersCount: number;
+  rejectedSellersCount: number;
+  totalCategoriesCount: number;
+  totalProductsCount: number;
+  activeListingsCount: number;
+  totalListingsCount: number;
+  totalStockUnits: number;
+  totalInventoryValueInr: number;
+}
+
+export interface AdminSellerMetric {
+  sellerId: number;
+  name: string;
+  businessName: string;
+  email: string;
+  status: SellerStatus;
+  rating: number;
+  totalListings: number;
+  activeListings: number;
+  outOfStockListings: number;
+  totalStockUnits: number;
+  inventoryValueInr: number;
+}
+
+export interface AdminCategoryMetric {
+  categoryId: number;
+  name: string;
+  description: string;
+  icon?: string;
+  productsCount: number;
+  activeListingsCount: number;
+  totalListingsCount: number;
+  lowestPrice: number | null;
+}
+
+export interface MarketplaceEvent {
+  id: string;
+  eventType: string;
+  description: string;
+  timestamp: string;
+}
+
+export interface AdminConcurrencyStats {
+  aggregationDurationMs: number;
+  poolSize: number;
+  activeThreads: number;
+  completedTaskCount: number;
+  threadPoolName: string;
+  concurrentTasksExecuted: string[];
+  timestamp: string;
+}
+
+export interface AdminDashboardResponse {
+  overview: AdminDashboardOverview;
+  sellerMetrics: AdminSellerMetric[];
+  categoryMetrics: AdminCategoryMetric[];
+  recentEvents: MarketplaceEvent[];
+  concurrencyStats: AdminConcurrencyStats;
+}
+

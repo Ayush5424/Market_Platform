@@ -39,4 +39,12 @@ public interface SellerListingRepository extends JpaRepository<SellerListing, Lo
            "WHERE l.product.id = :productId " +
            "ORDER BY l.price ASC")
     List<SellerListing> findAllListingsByProductId(@Param("productId") Long productId);
+
+    long countByIsActiveTrue();
+
+    @Query("SELECT l FROM SellerListing l " +
+           "JOIN FETCH l.seller s " +
+           "JOIN FETCH l.product p " +
+           "JOIN FETCH p.category c")
+    List<SellerListing> findAllWithDetails();
 }

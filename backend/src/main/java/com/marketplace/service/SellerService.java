@@ -41,10 +41,7 @@ public class SellerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + id));
     }
 
-    /**
-     * Validates that the seller exists and is APPROVED to manage catalogue listings.
-     * Rejects PENDING or REJECTED sellers.
-     */
+
     public Seller validateSellerForListingOperations(Long sellerId) {
         Seller seller = getSellerEntity(sellerId);
         if (seller.getStatus() == SellerStatus.PENDING) {
@@ -54,6 +51,14 @@ public class SellerService {
             throw new ForbiddenException("Seller account '" + seller.getBusinessName() + "' has been REJECTED. Listing operations are prohibited.");
         }
         return seller;
+    }
+
+    @Transactional
+    public SellerDto updateSellerStatus(Long sellerId, SellerStatus newStatus) {
+        Seller seller = getSellerEntity(sellerId);
+        seller.setStatus(newStatus);
+        Seller saved = sellerRepository.save(seller);
+        return toDto(saved);
     }
 
     public SellerDto toDto(Seller seller) {

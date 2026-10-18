@@ -4,10 +4,11 @@ import { api } from './services/api';
 import { Navbar } from './components/Navbar';
 import { BuyerMarketplace } from './components/BuyerMarketplace';
 import { SellerDashboard } from './components/SellerDashboard';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Loader2, HardHat } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const [view, setView] = useState<'buyer' | 'seller'>('buyer');
+  const [view, setView] = useState<'buyer' | 'seller' | 'admin'>('buyer');
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -62,15 +63,15 @@ export const App: React.FC = () => {
 
       {/* Main View Router */}
       <main className="flex-1">
-        {view === 'buyer' ? (
-          <BuyerMarketplace categories={categories} />
-        ) : (
+        {view === 'buyer' && <BuyerMarketplace categories={categories} />}
+        {view === 'seller' && (
           <SellerDashboard
             currentSeller={selectedSeller}
             sellers={sellers}
             onSelectSeller={(s) => setSelectedSeller(s)}
           />
         )}
+        {view === 'admin' && <AdminDashboard />}
       </main>
 
       {/* Clean, Professional Footer */}

@@ -40,6 +40,9 @@ class ListingServiceTest {
     @Mock
     private ProductService productService;
 
+    @Mock
+    private AdminDashboardService adminDashboardService;
+
     @InjectMocks
     private ListingService listingService;
 

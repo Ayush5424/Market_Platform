@@ -1,10 +1,10 @@
 import React from 'react';
 import { Seller } from '../types';
-import { HardHat, Store, ShoppingBag, ShieldCheck, Clock, ShieldAlert, ChevronDown } from 'lucide-react';
+import { HardHat, Store, ShoppingBag, ShieldCheck, Clock, ShieldAlert, ChevronDown, LayoutDashboard } from 'lucide-react';
 
 interface NavbarProps {
-  currentView: 'buyer' | 'seller';
-  onViewChange: (view: 'buyer' | 'seller') => void;
+  currentView: 'buyer' | 'seller' | 'admin';
+  onViewChange: (view: 'buyer' | 'seller' | 'admin') => void;
   sellers: Seller[];
   selectedSeller: Seller | null;
   onSellerSelect: (seller: Seller) => void;
@@ -87,6 +87,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Store className="w-4 h-4" />
               <span>Seller Portal</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewChange('admin')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                currentView === 'admin'
+                  ? 'bg-amber-500 text-slate-950 font-semibold shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Admin Portal</span>
             </button>
           </div>
 

@@ -13,4 +13,5 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
     List<Seller> findAllByOrderByBusinessNameAsc();
     List<Seller> findByStatusOrderByBusinessNameAsc(SellerStatus status);
     Optional<Seller> findByEmailIgnoreCase(String email);
+    long countByStatus(SellerStatus status);
 }

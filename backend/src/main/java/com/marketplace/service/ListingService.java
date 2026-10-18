@@ -26,13 +26,16 @@ public class ListingService {
     private final SellerListingRepository listingRepository;
     private final SellerService sellerService;
     private final ProductService productService;
+    private final AdminDashboardService adminDashboardService;
 
     public ListingService(SellerListingRepository listingRepository,
                           SellerService sellerService,
-                          ProductService productService) {
+                          ProductService productService,
+                          AdminDashboardService adminDashboardService) {
         this.listingRepository = listingRepository;
         this.sellerService = sellerService;
         this.productService = productService;
+        this.adminDashboardService = adminDashboardService;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +82,10 @@ public class ListingService {
         listing.setVersion(0L);
 
         SellerListing saved = listingRepository.saveAndFlush(listing);
+        adminDashboardService.broadcastChange(
+                "LISTING_CREATED",
+                "New listing created for '" + saved.getProduct().getName() + "' by " + seller.getBusinessName()
+        );
         return toDto(saved);
     }
 
@@ -105,6 +112,10 @@ public class ListingService {
         }
 
         SellerListing updated = listingRepository.saveAndFlush(listing);
+        adminDashboardService.broadcastChange(
+                "LISTING_UPDATED",
+                "Listing #" + listingId + " (" + updated.getProduct().getName() + ") updated by " + updated.getSeller().getBusinessName()
+        );
         return toDto(updated);
     }
 
@@ -115,6 +126,10 @@ public class ListingService {
 
         listing.setIsActive(active);
         SellerListing updated = listingRepository.save(listing);
+        adminDashboardService.broadcastChange(
+                "STATUS_TOGGLED",
+                "Listing #" + listingId + " availability toggled to " + (active ? "ACTIVE" : "INACTIVE") + " by " + updated.getSeller().getBusinessName()
+        );
         return toDto(updated);
     }
 
@@ -124,6 +139,10 @@ public class ListingService {
         verifyOwnership(currentSellerId, listing);
 
         listingRepository.delete(listing);
+        adminDashboardService.broadcastChange(
+                "LISTING_DELETED",
+                "Listing #" + listingId + " deleted by " + listing.getSeller().getBusinessName()
+        );
     }
 
     private SellerListing getListingEntity(Long listingId) {

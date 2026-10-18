@@ -8,6 +8,8 @@ import {
   CreateListingPayload,
   UpdateListingPayload,
   ApiError,
+  AdminDashboardResponse,
+  SellerStatus,
 } from '../types';
 
 const API_BASE_URL = '/api/v1';
@@ -124,5 +126,36 @@ export const api = {
       },
     });
     return handleResponse<void>(res);
+  },
+
+  // Admin Dashboard & Real-Time Sync
+  async getAdminDashboard(): Promise<AdminDashboardResponse> {
+    const res = await fetch(`${API_BASE_URL}/admin/dashboard`);
+    return handleResponse<AdminDashboardResponse>(res);
+  },
+
+  async triggerAdminSync(): Promise<AdminDashboardResponse> {
+    const res = await fetch(`${API_BASE_URL}/admin/dashboard/sync`, {
+      method: 'POST',
+    });
+    return handleResponse<AdminDashboardResponse>(res);
+  },
+
+  async simulateAdminConcurrency(threads = 10): Promise<Record<string, any>> {
+    const res = await fetch(`${API_BASE_URL}/admin/dashboard/simulate-concurrency?threads=${threads}`, {
+      method: 'POST',
+    });
+    return handleResponse<Record<string, any>>(res);
+  },
+
+  async updateSellerStatus(sellerId: number, status: SellerStatus): Promise<Seller> {
+    const res = await fetch(`${API_BASE_URL}/admin/sellers/${sellerId}/status?status=${status}`, {
+      method: 'PUT',
+    });
+    return handleResponse<Seller>(res);
+  },
+
+  getDashboardStreamUrl(): string {
+    return `${API_BASE_URL}/admin/dashboard/stream`;
   },
 };

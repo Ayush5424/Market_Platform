@@ -27,7 +27,12 @@ Suppliers and distributors manage their listings through an authenticated **Sell
 * **One-Click Listing Toggles**: Instantly deactivate or reactivate listings without deleting historical inventory records.
 * **Duplicate Listing Prevention**: Enforces a database-level and application-level unique constraint on `(seller_id, product_id)` to prevent duplicate listings by the same seller.
 * **Optimistic Locking Concurrency**: Uses JPA `@Version` on `SellerListing` to detect conflicting concurrent updates and return HTTP 409 Conflict with clear error feedback.
-* **Role & Status Enforcement**: Rejects listing modifications for sellers with `PENDING` or `REJECTED` status with HTTP 403 Forbidden.
+### 3. Market Admin Portal Dashboard & Real-Time Concurrency
+* **Live Supplier Monitoring**: Real-time counter and telemetry tracking how many sellers are live (`status = 'APPROVED'`), pending review, or suspended.
+* **Product & Category Oversight**: Real-time aggregation of total products listed by live sellers, master catalogue items, and active category distribution.
+* **Concurrent Processing Engine**: High-performance parallel data aggregation using Java `CompletableFuture` across an asynchronous `ThreadPoolTaskExecutor` (`admin-worker-` pool), executing seller, listing, and category metrics concurrently with zero thread blocking.
+* **Real-Time Push Synchronization (SSE)**: Native Server-Sent Events stream (`/api/v1/admin/dashboard/stream`) broadcasting instant metric updates whenever listings are created, updated, toggled, or when supplier approval statuses change.
+* **Supplier Governance Controls**: One-click administrative approval, review, and suspension of supplier accounts with instantaneous marketplace-wide synchronization.
 
 ---
 
@@ -35,12 +40,13 @@ Suppliers and distributors manage their listings through an authenticated **Sell
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide React |
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide React, EventSource (SSE) |
 | **Backend** | Java 21, Spring Boot 3.3.4, Spring Data JPA, Hibernate ORM, Maven |
 | **Database** | PostgreSQL 16 (Containerized via Docker Compose) |
 | **Database Migrations** | Flyway Core & Flyway PostgreSQL |
 | **Testing** | JUnit 5, Mockito, AssertJ, Spring MockMvc, Spring Boot Test |
-| **Concurrency Control** | JPA `@Version` Optimistic Locking |
+| **Concurrency Control** | JPA `@Version` Optimistic Locking & `CompletableFuture` Parallel Thread Pool |
+| **Real-Time Streaming** | Server-Sent Events (SSE) via `SseEmitter` |
 
 ---
 
@@ -48,10 +54,11 @@ Suppliers and distributors manage their listings through an authenticated **Sell
 
 ```
 [ Frontend: React + TypeScript + Vite + Tailwind CSS ]
-                      │  HTTP REST (JSON)
+                      │  HTTP REST (JSON) + SSE (/admin/dashboard/stream)
                       │  Header: X-Seller-Id
                       ▼
 [ Controllers Layer ]
+  ├── AdminDashboardController      (/api/v1/admin/dashboard, /stream)
   ├── BuyerMarketplaceController    (/api/v1/products)
   ├── SellerListingController       (/api/v1/seller/listings)
   ├── CategoryController            (/api/v1/categories)
@@ -59,6 +66,7 @@ Suppliers and distributors manage their listings through an authenticated **Sell
                       │
                       ▼
 [ Business Services Layer ]
+  ├── AdminDashboardService (Concurrent Aggregation & SSE Broadcast)
   ├── ProductService
   ├── ListingService (Ownership, Validation, Concurrency)
   ├── SellerService (Status Verification, Identity Header)
